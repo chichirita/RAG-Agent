@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>PolarAgency — Ваш логистический партнёр</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="logo">🌐 PolarAgency</div>
+        <nav>
+            <a href="#">О компании</a>
+            <a href="#">Услуги</a>
+            <a href="#">Контакты</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>PolarAgency</h1>
+        <p>Надёжные логистические решения для вашего бизнеса.</p>
+    </section>
+
+    <button id="chat-toggle">💬 Чат</button>
+
+    <div class="middle-container"></div>
+
+    <div id="chat-widget" class="chat-container">
+        <div class="chat-header">
+            <span>Чат PolarAgency</span>
+            <button id="close-chat">✖️</button>
+        </div>
+        <div id="chat-box">
+        </div>
+        <div class="input-container">
+            <input id="user-input" type="text" placeholder="Задайте вопрос..." autofocus>
+            <button id="send-btn">➤</button>
+        </div>
+    </div>
+
+    <footer>
+        © 2025 PolarAgency. Все права защищены.
+    </footer>
+
+    <script>
+        const chatBox = document.getElementById("chat-box");
+        const input = document.getElementById("user-input");
+        const btn = document.getElementById("send-btn");
+        const chatWidget = document.getElementById("chat-widget");
+        const toggleBtn = document.getElementById("chat-toggle");
+        const closeBtn = document.getElementById("close-chat");
+
+        toggleBtn.onclick = () => {
+            chatWidget.style.display = "flex";
+            toggleBtn.style.display = "none";
+
+            if (!chatBox.dataset.started) {
+                addMessage("Приветствую! Я менеджер на основе ИИ PolarAgency. Подскажите, как могу к вам обращаться?", "bot");
+                chatBox.dataset.started = "true";
+            }
+        };
+
+        closeBtn.onclick = () => {
+            chatWidget.style.display = "none";
+            toggleBtn.style.display = "block";
+        };
+
+        function addMessage(text, cls) {
+            const div = document.createElement("div");
+            div.className = "message " + cls;
+            div.textContent = text;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return div;
+        }
+
+        async function sendMessage() {
+            const message = input.value;
+            if (!message) return;
+            addMessage(message, "user");
+            input.value = "";
+
+
+            const typingIndicator = addMessage("Менеджер набирает сообщение...", "typing");
+
+            const response = await fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "message=" + encodeURIComponent(message)
+            });
+
+            const reader = response.body.getReader();
+
+            // создаём блок для текста ответа
+            const botMsg = document.createElement("div");
+            botMsg.className = "message bot";
+
+            // убираем индикатор и вставляем блок ответа
+            chatBox.removeChild(typingIndicator);
+            chatBox.appendChild(botMsg);
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                botMsg.textContent += new TextDecoder().decode(value);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
+
+        btn.onclick = sendMessage;
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+
+
+</body>
+</html>
