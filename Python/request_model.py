@@ -22,7 +22,7 @@ def get_model_response(topic):
     return model_response
 
 if __name__ == "__main__":
-    topic = 'Объясни понятие RAG (Retrieval-Augmented Generation).' # Вопрос пользователя
+    topic = 'Объясни понятие RAG (Retrieval-Augmented Generation).'
     logger.debug(topic)
 
     model_response = get_model_response(topic)
